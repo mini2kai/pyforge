@@ -15,7 +15,7 @@
 //! ```
 //!
 //! `link` writes `links.json` in the IDE's plugins directory
-//! (`$OPENIDEA_PLUGINS_DIR`, or the app data directory); the IDE picks the
+//! (`$PYFORGE_PLUGINS_DIR`, or the app data directory); the IDE picks the
 //! change up when Settings › Plugins is opened or refreshed. Linked plugins
 //! are re-read from the folder, so `build` + refresh is the edit loop.
 
@@ -60,7 +60,7 @@ commands:
                           (a path or URL), their plugins and revocations
 
 environment:
-  OPENIDEA_PLUGINS_DIR    the IDE's plugins directory (default: the app data directory)";
+  PYFORGE_PLUGINS_DIR    the IDE's plugins directory (default: the app data directory)";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -421,12 +421,12 @@ fn human_size(bytes: u64) -> String {
 // ---------------------------------------------------------------- link
 
 fn plugins_dir() -> Result<PathBuf, String> {
-    if let Some(dir) = std::env::var_os("OPENIDEA_PLUGINS_DIR") {
+    if let Some(dir) = std::env::var_os("PYFORGE_PLUGINS_DIR") {
         return Ok(PathBuf::from(dir));
     }
     dirs::data_dir()
         .map(|d| d.join("ai.pyforge.ide").join("plugins"))
-        .ok_or_else(|| "cannot find the app data directory; set OPENIDEA_PLUGINS_DIR".into())
+        .ok_or_else(|| "cannot find the app data directory; set PYFORGE_PLUGINS_DIR".into())
 }
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]

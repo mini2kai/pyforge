@@ -1,7 +1,7 @@
 /**
  * The frame may not download files (no `allow-downloads`): Excalidraw's
  * "Save to disk" and image export click a download link, which this turns
- * into the IDE's save dialog (`openidea.saveFile`).
+ * into the IDE's save dialog (`pyforge.saveFile`).
  */
 const click = HTMLAnchorElement.prototype.click;
 

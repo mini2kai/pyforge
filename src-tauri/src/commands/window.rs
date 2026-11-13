@@ -334,14 +334,14 @@ pub struct CliInstallation {
     pub path_directory: Option<ide_core::IpcPath>,
 }
 
-/// Installs the `openidea` command for this user.
+/// Installs the `pyforge` command for this user.
 #[tauri::command]
 #[specta::specta]
 pub async fn app_cli_install() -> IdeResult<CliInstallation> {
     tauri::async_runtime::spawn_blocking(crate::cli::install).await.map_err(|e| IdeError::internal(e.to_string()))?
 }
 
-/// Removes the installed `openidea` command; returns the links removed.
+/// Removes the installed `pyforge` command; returns the links removed.
 #[tauri::command]
 #[specta::specta]
 pub async fn app_cli_uninstall() -> IdeResult<Vec<ide_core::IpcPath>> {

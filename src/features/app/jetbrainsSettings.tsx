@@ -1,6 +1,6 @@
 /**
  * Import Settings… with a JetBrains `settings.zip`: maps the archive's colour
- * schemes and the editor / general options OpenIDEA has to settings writes, after
+ * schemes and the editor / general options PyForge has to settings writes, after
  * a confirmation listing them. Only keys present in the archive are written
  * (JetBrains leaves defaults out). Keymaps, code styles and the rest are listed
  * as not imported.

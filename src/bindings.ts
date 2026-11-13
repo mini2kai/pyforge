@@ -1005,9 +1005,9 @@ export const commands = {
 	 */
 	menuSetDisabled: (ids: string[]) => __TAURI_INVOKE<void>("menu_set_disabled", { ids }),
 	appLogLocation: () => typedError<LogLocation, IdeError>(__TAURI_INVOKE("app_log_location")),
-	/**  Installs the `openidea` command for this user. */
+	/**  Installs the `pyforge` command for this user. */
 	appCliInstall: () => typedError<CliInstallation, IdeError>(__TAURI_INVOKE("app_cli_install")),
-	/**  Removes the installed `openidea` command; returns the links removed. */
+	/**  Removes the installed `pyforge` command; returns the links removed. */
 	appCliUninstall: () => typedError<IpcPath[], IdeError>(__TAURI_INVOKE("app_cli_uninstall")),
 	appBuildInfo: () => __TAURI_INVOKE<BuildInfo>("app_build_info"),
 	appCheckUpdate: (source: UpdateSource) => typedError<UpdateCheck, IdeError>(__TAURI_INVOKE("app_check_update", { source })),
@@ -1206,13 +1206,13 @@ export const commands = {
 	 */
 	pluginLogTabSpawn: (pluginId: string, key: string, on: string[], cols: number, rows: number, onOutput: Channel<string>) => typedError<TerminalInfo, IdeError>(__TAURI_INVOKE("plugin_log_tab_spawn", { pluginId, key, on, cols, rows, onOutput })),
 	/**
-	 *  Writes what a web view saves (`openidea.saveFile`) to the path the user
+	 *  Writes what a web view saves (`pyforge.saveFile`) to the path the user
 	 *  chose in the save dialog, on this machine.
 	 */
 	pluginWebSaveFile: (path: string, base64: string) => typedError<null, IdeError>(__TAURI_INVOKE("plugin_web_save_file", { path, base64 })),
 	/**
 	 *  Reads the file the user picked in an open dialog for a web view
-	 *  (`openidea.openFile`), on this machine; base64.
+	 *  (`pyforge.openFile`), on this machine; base64.
 	 */
 	pluginWebReadFile: (path: string) => typedError<string, IdeError>(__TAURI_INVOKE("plugin_web_read_file", { path })),
 	/**  Gutter markers of plugin `line-markers` providers for an open document. */
@@ -4558,7 +4558,7 @@ export type GradleProject = {
 export type GradleRunUsing = 
 /**  A `JavaExec` task on the source set's runtime classpath (`gradleRun.gradle`). */
 "gradle" | 
-/**  The Java language server's classpath, launched by OpenIDEA. */
+/**  The Java language server's classpath, launched by PyForge. */
 "ide";
 
 /**  Build Tools › Gradle. */
@@ -5272,11 +5272,11 @@ export type JdkVendor = {
 
 /**
  *  A JetBrains IDE's File › Manage IDE Settings › Export Settings… archive: every
- *  entry name, and the text of the entries OpenIDEA maps (the frontend does the mapping).
+ *  entry name, and the text of the entries PyForge maps (the frontend does the mapping).
  */
 export type JetBrainsSettings = {
 	entries: string[],
-	/**  Entry name → text, for `colors/*.icls` and the `options/*.xml` files OpenIDEA reads. */
+	/**  Entry name → text, for `colors/*.icls` and the `options/*.xml` files PyForge reads. */
 	files: { [key in string]: string },
 };
 

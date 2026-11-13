@@ -646,14 +646,14 @@ pub fn available_shells() -> Vec<String> {
 /// argument-less) POSIX shell is started as a login shell, like Terminal.app,
 /// the Git Bash shortcut and IDEA: login start-up is what loads the completions
 /// and prompts users expect (`/etc/profile`, Git for Windows' git-completion).
-/// `OPENIDEA_SKIP_SHELL_ENV` disables the implicit login argument; explicit
+/// `PYFORGE_SKIP_SHELL_ENV` disables the implicit login argument; explicit
 /// arguments still take precedence, and interactive startup files still run.
 pub fn resolve_shell(shell: Option<&str>, args: &[String]) -> (String, Vec<String>) {
     let shell = shell.map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned).unwrap_or_else(default_shell);
     if !args.is_empty() {
         return (shell, args.to_vec());
     }
-    let login = std::env::var_os("OPENIDEA_SKIP_SHELL_ENV").is_none()
+    let login = std::env::var_os("PYFORGE_SKIP_SHELL_ENV").is_none()
         && matches!(shell_title(&shell).as_str(), "zsh" | "bash" | "sh" | "fish" | "ksh" | "dash" | "tcsh" | "csh");
     let args = if login { vec!["-l".to_owned()] } else { Vec::new() };
     (shell, args)
@@ -923,8 +923,8 @@ mod tests {
     #[test]
     fn env_is_applied() {
         let h = harness();
-        let mut opts = sh("printf '%s|%s|%s' \"$TERM\" \"$TERM_PROGRAM\" \"$OPENIDEA_X\"");
-        opts.env.insert("OPENIDEA_X".into(), "42".into());
+        let mut opts = sh("printf '%s|%s|%s' \"$TERM\" \"$TERM_PROGRAM\" \"$PYFORGE_X\"");
+        opts.env.insert("PYFORGE_X".into(), "42".into());
         let (info, rx) = spawn_collect(&h, opts);
         assert_eq!(wait_exit(&h, info.id), Some(0));
         let out: String = rx.try_iter().collect();

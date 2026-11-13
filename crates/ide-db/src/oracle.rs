@@ -289,7 +289,7 @@ impl OracleConnection {
 
 fn open(state: &State) -> oracle::Result<OracleHandle> {
     let mut connector = oracle::Connector::new(state.user.clone(), state.password.clone(), state.connect.clone());
-    connector.driver_name("OpenIDEA");
+    connector.driver_name("PyForge");
     if let Some(n) = state.statement_cache {
         connector.stmt_cache_size(n);
     }

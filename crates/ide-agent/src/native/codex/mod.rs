@@ -247,7 +247,7 @@ impl CodexShim {
             .call(
                 "initialize",
                 json!({
-                    "clientInfo": { "name": "openidea", "title": "OpenIDEA", "version": env!("CARGO_PKG_VERSION") },
+                    "clientInfo": { "name": "pyforge", "title": "PyForge", "version": env!("CARGO_PKG_VERSION") },
                     "capabilities": { "experimentalApi": true, "optOutNotificationMethods": OPT_OUT },
                 }),
             )

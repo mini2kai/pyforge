@@ -9,7 +9,7 @@ per project in `.pyforge/data-sources.toml`; passwords live outside the project
 ## Oracle: Oracle Instant Client
 
 Oracle support uses the Oracle Call Interface, so the Oracle client libraries
-must be installed on the machine. OpenIDEA does not bundle them: install the
+must be installed on the machine. PyForge does not bundle them: install the
 **Oracle Instant Client** for your platform and point the data source at it.
 
 1. Download the _Basic_ (or _Basic Light_) package of Oracle Instant Client

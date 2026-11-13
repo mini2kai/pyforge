@@ -254,7 +254,7 @@ fn resolves_to(path_var: Option<&OsStr>, command: &Path) -> bool {
 
 fn user_bin() -> io::Result<PathBuf> {
     if cfg!(windows) {
-        dirs::data_local_dir().map(|dir| dir.join("OpenIDEA/bin"))
+        dirs::data_local_dir().map(|dir| dir.join("PyForge/bin"))
     } else {
         dirs::home_dir().map(|dir| dir.join(".local/bin"))
     }

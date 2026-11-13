@@ -1,6 +1,7 @@
 # 产品身份：PyForge 与上游 OpenIDEA 的关系
 
-改一次名，涉及的不只是图标和标题。这份文档记录**哪些地方叫 PyForge、哪些仍然叫 openidea，以及为什么**。
+改一次名，涉及的不只是图标和标题。这份文档记录**哪些地方叫 PyForge、哪些仍然
+叫 openidea，以及为什么**。
 
 ## 一、当前约定
 
@@ -13,14 +14,26 @@
 | 数据目录                         | `%APPDATA%\ai.pyforge.ide`、`%LOCALAPPDATA%\ai.pyforge.ide` | 间接                 |
 | 开发版数据目录                   | `…\ai.pyforge.ide.dev.w<hash>`                              | 否                   |
 | 凭据管理器服务名                 | `ai.pyforge.ide` / `ai.pyforge.ide.plugin.<id>`             | 否                   |
-| crate 名、二进制 crate 内部名    | `openidea`、`openidea_lib`、`ide-*`                         | 否                   |
+| crate 名                         | `pyforge`、`pyforge_lib`、`ide-*`                           | 否                   |
+| 远程开发服务端                   | `pyforge-server`                                            | 否                   |
+| 插件 CLI / SDK                   | `pyforge-plugin`、`pyforge_plugin`                          | 是（插件作者）       |
+| 项目配置目录                     | `.pyforge/`                                                 | 是                   |
+| 日志文件                         | `pyforge.log`                                               | 间接                 |
+| **插件 ABI 命名空间**            | **`openidea:plugin@x.y.z`**                                 | 是（插件作者）       |
 
-## 二、为什么 crate 名不改
+## 二、插件 ABI 为什么不改
 
-crate 名和 Rust target 名是**内部标识**，用户看不到。改它们要全量重编译，
-还会让和上游的 diff 变得不可读——这个 POC 的价值之一就是改动可以逐条对照上游。
-`PyForge` 的安装包里有 `pyforge.exe`，里面是 `openidea_lib`，这是正常做法
-（VS Code 的进程叫 `Code.exe`，内部 crate 是 `code-oss`）。
+`openidea:plugin` 是 **WebAssembly 插件的 ABI 命名空间**，写在各插件包的
+`plugin.wit` 里。它和产品名是两回事：
+
+- `sdk/rust/pyforge-plugin/tests/api/released/` 下有 19 份**已发布的 ABI 快照**，
+  记录每个版本承诺给插件的接口。
+- 改命名空间等于宣布所有已发布的插件不兼容，而它们内部实现没变。
+
+所以：crate 名、可执行文件名、目录名都改了，**唯独这个命名空间保持
+`openidea:plugin`**。这也解释了为什么 `sdk/` 和 `plugins/` 里仍能看到它。
+
+（VS Code 有同样的做法：进程叫 `Code.exe`，内部 crate 是 `code-oss`。）
 
 ## 三、为什么 identifier 必须改
 
@@ -30,7 +43,7 @@ crate 名和 Rust target 名是**内部标识**，用户看不到。改它们要
 1. **无法并存**：`tauri-plugin-single-instance` 按 identifier 判定。同 identifier
    意味着启动 PyForge 时，它会被转交给已经运行的 OpenIDEA，然后自己退出——
    用户看到的是 OpenIDEA 的窗口，PyForge 根本没起来。
-2. **数据目录冲突**：两者共用 `%APPDATA%\ai.l0ng.pyforge`，共享设置、最近项目，
+2. **数据目录冲突**：两者共用 `%APPDATA%\ai.l0ng.openidea`，共享设置、最近项目，
    以及同一个 WebView2 profile 目录。
 3. **自动更新会把它换掉**：上游的 updater endpoint 指向
    `github.com/l0ng-ai/openidea`。装了这个版本的人会被「更新」成上游 OpenIDEA。
@@ -40,22 +53,41 @@ crate 名和 Rust target 名是**内部标识**，用户看不到。改它们要
 
 ## 四、updater 的处理
 
-`bundle.createUpdaterArtifacts` 关闭、`plugins.updater` 整段移除。
+两处配置：
 
-理由同上：这个 POC 没有自己的更新通道，留着上游的 endpoint 等于给对方一个
-把 PyForge 覆盖掉的机会。要发布自己的版本时，重新生成一对密钥，
-并把 endpoint 指向 PyForge 自己的 release。
+```json
+"bundle": { "createUpdaterArtifacts": false },
+"plugins": { "updater": { "endpoints": [], "pubkey": "…" } }
+```
+
+**为什么是重置而不是删除整个 `plugins.updater`**：`lib.rs` 无条件注册 updater
+插件，配置缺失会让它 panic（`invalid type: null, expected struct Config`）。
+空 `endpoints` 让 `updates_configured()` 返回 false，UI 显示「更新已禁用」。
+
+理由同上一条第 3 点：这个 POC 没有自己的更新通道，留着上游 endpoint 等于给对方
+一个把 PyForge 覆盖掉的机会。
+
+要发布自己的更新时：
+
+1. `npx tauri signer generate -w ~/.tauri/pyforge.key`
+2. 把新公钥填进 `plugins.updater.pubkey`
+3. `endpoints` 指向 `https://github.com/ppk159/pyforge/releases/latest/download/latest.json`
+4. `createUpdaterArtifacts` 改成 `true`
+5. 构建时提供 `TAURI_SIGNING_PRIVATE_KEY`
+6. 每次发版生成并上传 `latest.json`
+
+⚠️ 一旦启用，**之后每个版本都必须带正确签名**，否则老用户无法升级。
 
 ## 五、两个版本能同时装吗
 
 能。identifier、可执行文件名、CLI 命令名、数据目录、凭据服务名全部不同：
 
-|            | 上游 OpenIDEA               | 本仓库构建                 |
-| ---------- | --------------------------- | -------------------------- |
-| 可执行文件 | `openidea.exe`              | `pyforge.exe`              |
-| identifier | `ai.l0ng.pyforge`           | `ai.pyforge.ide`           |
-| 数据       | `%APPDATA%\ai.l0ng.pyforge` | `%APPDATA%\ai.pyforge.ide` |
-| CLI        | `openidea`                  | `pyforge`                  |
+|            | 上游 OpenIDEA                | 本仓库构建                 |
+| ---------- | ---------------------------- | -------------------------- |
+| 可执行文件 | `openidea.exe`               | `pyforge.exe`              |
+| identifier | `ai.l0ng.openidea`           | `ai.pyforge.ide`           |
+| 数据       | `%APPDATA%\ai.l0ng.openidea` | `%APPDATA%\ai.pyforge.ide` |
+| CLI        | `openidea`                   | `pyforge`                  |
 
 唯一的共同点是**源码**：两者都来自同一个上游仓库。
 
@@ -72,26 +104,37 @@ crate 名和 Rust target 名是**内部标识**，用户看不到。改它们要
 | `src-tauri/src/cli.rs`                           | 报错前缀、bundle 内可执行文件路径              |
 | `src-tauri/src/dev.rs`                           | 开发版 identifier（每个 worktree 一个）        |
 | `src-tauri/src/commands/plugin.rs`               | 插件凭据的服务名                               |
+| `src-tauri/src/logging.rs`                       | 日志文件前缀 `pyforge`                         |
+| `crates/ide-core/src/project_dir.rs`             | 项目配置目录常量 `.pyforge`                    |
+| `crates/ide-tools/src/lib.rs`                    | 工具清单 `.pyforge-tool.json`                  |
 | `crates/ide-cli/src/install.rs`                  | `COMMAND` 常量、`LAUNCHER` 路径、`.cmd` 包装器 |
 | `crates/ide-cli/src/socket.rs`                   | 单实例管道/套接字名                            |
 | `crates/ide-ssh/src/secrets.rs`                  | 凭据管理器服务名                               |
 | `crates/ide-host/src/bin/pyforge-plugin/main.rs` | 插件助手查找数据目录用的 identifier            |
 | `scripts/dev-session.ts`                         | 与 `dev.rs` 必须算出同一个开发版 identifier    |
+| `src/platform/locales/*.json`                    | 七种语言里的产品名                             |
 
-**没改**的两处：
+**刻意保留 `openidea` 的地方**：
 
-- `perf/compare/apps.toml` —— 性能对比工具的基准配置，它描述的是**外部已安装的
-  应用**，不是本仓库的产物。
-- 各 crate 内的路径字面量测试 —— 已一并改成 `ai.pyforge.ide`，让测试描述的
-  就是产品真实的目录形状。
+| 位置                                    | 为什么                                       |
+| --------------------------------------- | -------------------------------------------- |
+| `openidea:plugin@x.y.z`（WIT ABI）      | 插件兼容性契约，见第二节                     |
+| `crates/**/tests/` 里的 mock 与 fixture | 描述外部工具/服务的形状，不是本产品          |
+| `perf/compare/apps.toml`                | 性能对比工具的基准，描述**外部已安装的应用** |
+| 上游仓库链接（README、LICENSE）         | Apache 2.0 的出处标注                        |
 
 ## 七、升级到新 identifier 后的影响
 
 从旧构建升级过来的人（如果存在）：
 
 - 最近项目列表、窗口布局、插件、设置**不会自动迁移**——数据在旧目录里。
+- **项目级的 `.openidea/` 也不会迁移**：运行配置、变更列表留在旧目录。手动复制：
+  ```bash
+  cp .openidea/run.local.toml .pyforge/
+  cp .openidea/settings.toml  .pyforge/
+  ```
 - 凭据管理器里的 SSH/Git 密码条目在旧服务名下，需要重新输入。
 - 旧的 `openidea` CLI 链接仍然存在，指向旧的可执行文件。
 
-POC 阶段不做迁移。要做迁移的话，是在首次启动时读旧目录并复制，属于发布工程，
+POC 阶段不做自动迁移。要做的话，是在首次启动时读旧目录并复制，属于发布工程，
 不是重构能力本身。

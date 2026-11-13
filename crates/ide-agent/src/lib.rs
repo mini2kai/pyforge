@@ -2166,7 +2166,7 @@ fn usage_limit(e: &RpcError) -> Option<Option<f64>> {
 }
 
 fn client_info() -> Value {
-    json!({ "name": "OpenIDEA", "version": env!("CARGO_PKG_VERSION") })
+    json!({ "name": "PyForge", "version": env!("CARGO_PKG_VERSION") })
 }
 
 /// What the agent said it can do, and whether it takes embedded files.
@@ -2305,5 +2305,5 @@ fn mcp_servers_for(supported: bool, root: &std::path::Path) -> Vec<Value> {
 fn stdio_mcp_servers(executable: Option<&std::path::Path>, supported: bool, root: &std::path::Path) -> Vec<Value> {
     let Some(executable) = executable.filter(|_| supported) else { return Vec::new() };
     let command = ide_mcp::stdio_command(executable, root);
-    vec![json!({ "name": "OpenIDEA", "command": command[0], "args": command[1..], "env": [] })]
+    vec![json!({ "name": "PyForge", "command": command[0], "args": command[1..], "env": [] })]
 }

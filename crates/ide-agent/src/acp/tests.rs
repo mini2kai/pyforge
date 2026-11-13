@@ -86,10 +86,10 @@ fn tool(entry: &AgentEntry) -> (&str, AgentToolStatus, Option<&str>) {
 
 #[test]
 fn the_negotiating_request_carries_both_versions() {
-    let p = initialize_params(&json!({ "name": "OpenIDEA", "version": "1.0" }));
+    let p = initialize_params(&json!({ "name": "PyForge", "version": "1.0" }));
     assert_eq!(p["protocolVersion"], 2);
-    assert_eq!(p["info"]["name"], "OpenIDEA");
-    assert_eq!(p["clientInfo"]["name"], "OpenIDEA");
+    assert_eq!(p["info"]["name"], "PyForge");
+    assert_eq!(p["clientInfo"]["name"], "PyForge");
     assert!(p["capabilities"].is_object());
     assert_eq!(p["clientCapabilities"]["subagents"], json!({}));
     assert_eq!(p["clientCapabilities"]["terminal"], false);
@@ -455,7 +455,7 @@ async fn connect(agent: Arc<ScriptedAgent>) -> (Conn, Arc<Recorder>) {
     let recorder = Arc::new(Recorder::default());
     let dialect = Dialect::wrap(recorder.clone());
     let conn = Conn::new(Peer::connect_framed(ar, aw, dialect.clone(), Framing::Lines), dialect);
-    let n = conn.initialize(&json!({ "name": "OpenIDEA", "version": "0" })).await.unwrap();
+    let n = conn.initialize(&json!({ "name": "PyForge", "version": "0" })).await.unwrap();
     assert_eq!((n.generation, conn.generation()), (2, 2));
     (conn, recorder)
 }

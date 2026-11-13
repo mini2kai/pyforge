@@ -330,12 +330,12 @@ impl SettingsStore {
 }
 
 /// A JetBrains IDE's File › Manage IDE Settings › Export Settings… archive: every
-/// entry name, and the text of the entries OpenIDEA maps (the frontend does the mapping).
+/// entry name, and the text of the entries PyForge maps (the frontend does the mapping).
 #[derive(serde::Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct JetBrainsSettings {
     pub entries: Vec<String>,
-    /// Entry name → text, for `colors/*.icls` and the `options/*.xml` files OpenIDEA reads.
+    /// Entry name → text, for `colors/*.icls` and the `options/*.xml` files PyForge reads.
     pub files: BTreeMap<String, String>,
 }
 

@@ -1,6 +1,6 @@
-# Writing OpenIDEA plugins
+# Writing PyForge plugins
 
-OpenIDEA plugins are sandboxed **WebAssembly components** (wasmtime, component
+PyForge plugins are sandboxed **WebAssembly components** (wasmtime, component
 model, WASI preview 2). A plugin can register commands (they become IDE actions
 you can search for and bind to keys), read project files, edit the focused
 editor, react to workbench events, run background tasks, show notifications
@@ -37,7 +37,8 @@ sdk/rust/pyforge-plugin/     # the Rust SDK (host API, Plugin trait, mock host)
 crates/ide-plugin/tests/fixtures/  # test plugins: hello, jobs, language-toy, misbehave, semantic-tokens, hover, commit, inlay-hints
 ```
 
-The plugin API is defined in [`wit/`](../wit/) (`openidea:plugin@1.4.0`, world
+The plugin API is defined in [`wit/`](../wit/) (`openidea:plugin@1.4.0` — the WIT
+package keeps its original name so published plugins stay valid — world
 `plugin`).
 
 ## 1. Quick start
@@ -45,7 +46,7 @@ The plugin API is defined in [`wit/`](../wit/) (`openidea:plugin@1.4.0`, world
 The `pyforge-plugin` tool scaffolds, builds, checks and links plugins:
 
 ```sh
-cargo install --locked --git https://github.com/l0ng-ai/openidea ide-host --bin pyforge-plugin
+cargo install --locked --git https://github.com/ppk159/pyforge ide-host --bin pyforge-plugin
 # in a checkout of this repository: cargo install --path crates/ide-host --bin pyforge-plugin
 
 pyforge-plugin new my-plugin                          # Rust command plugin (SDK)
@@ -367,7 +368,7 @@ are always available. Calling a gated function without its capability returns
 
 ### API 1.4
 
-API 1.4.0 is planned for the next OpenIDEA release. Use
+API 1.4.0 is planned for the next PyForge release. Use
 `engines.pyforge = "^1.4"` and the matching SDK. Released 1.3 plugins keep
 working. New in 1.4:
 
@@ -422,7 +423,7 @@ edition = "2024"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyforge-plugin = { git = "https://github.com/l0ng-ai/openidea", tag = "vX.Y.Z" }   # or { path = "…/sdk/rust/pyforge-plugin" }
+pyforge-plugin = { git = "https://github.com/ppk159/pyforge", tag = "vX.Y.Z" }   # or { path = "…/sdk/rust/pyforge-plugin" }
 
 [profile.release]
 opt-level = "s"
@@ -701,7 +702,7 @@ retain its documented “not supported for remote projects yet” response.
 
 The new host interface `mcp` has `stdio-command() -> option<list<string>>`
 (`host::mcp_stdio_command()`). It returns only bridge argv for the invoking
-project, such as `["/path/openidea", "--mcp-stdio", "--project", "/project"]`;
+project, such as `["/path/pyforge", "--mcp-stdio", "--project", "/project"]`;
 never the HTTP URL or bearer token. It returns `none` while the server is off,
 without a project window, or on a remote host without its own running server.
 It needs no additional capability.
@@ -1361,24 +1362,24 @@ Editor and … / … Only_ switch in the tab strip, as for Markdown. `"tab"`
 `Html` is the escape hatch for content the declarative bodies can't show. It
 runs in a sandboxed frame — an opaque origin under a CSP that allows only its
 inline scripts and styles and `data:` images, no network, no IDE API — and
-talks to the plugin only through `openidea.postMessage(text)` /
-`openidea.onMessage(fn)` (`ViewEvent::Message`, `host::post_view_message`).
+talks to the plugin only through `pyforge.postMessage(text)` /
+`pyforge.onMessage(fn)` (`ViewEvent::Message`, `host::post_view_message`).
 
 The frame follows the IDE theme without reloading: its root carries
 `data-theme="light|dark"` and these CSS variables, with concrete colour
 values (the body already uses the text colour, UI font and size):
 
-| Variable                                                                                                          | Meaning                                                          |
-| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `--openidea-bg`, `--openidea-bg-elevated`, `--openidea-bg-hover`, `--openidea-bg-selected`, `--openidea-bg-input` | Surfaces (the frame itself is transparent)                       |
-| `--openidea-fg`, `--openidea-fg-strong`, `--openidea-fg-muted`                                                    | Text                                                             |
-| `--openidea-border`, `--openidea-focus-ring`, `--openidea-link`                                                   | Lines, focus, links                                              |
-| `--openidea-accent`, `--openidea-fg-on-accent`                                                                    | Accent and text on it                                            |
-| `--openidea-danger`, `--openidea-warning`, `--openidea-success`, `--openidea-info`                                | Status colours                                                   |
-| `--openidea-font-ui`, `--openidea-font-mono`, `--openidea-font-size`                                              | Fonts (web fonts the IDE bundles are not available in the frame) |
+| Variable                                                                                                     | Meaning                                                          |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `--pyforge-bg`, `--pyforge-bg-elevated`, `--pyforge-bg-hover`, `--pyforge-bg-selected`, `--pyforge-bg-input` | Surfaces (the frame itself is transparent)                       |
+| `--pyforge-fg`, `--pyforge-fg-strong`, `--pyforge-fg-muted`                                                  | Text                                                             |
+| `--pyforge-border`, `--pyforge-focus-ring`, `--pyforge-link`                                                 | Lines, focus, links                                              |
+| `--pyforge-accent`, `--pyforge-fg-on-accent`                                                                 | Accent and text on it                                            |
+| `--pyforge-danger`, `--pyforge-warning`, `--pyforge-success`, `--pyforge-info`                               | Status colours                                                   |
+| `--pyforge-font-ui`, `--pyforge-font-mono`, `--pyforge-font-size`                                            | Fonts (web fonts the IDE bundles are not available in the frame) |
 
-Scripts get the same as `openidea.theme` (`{ dark, vars }`) and
-`openidea.onThemeChange(fn)`, for drawing on a canvas, say. Variables are only
+Scripts get the same as `pyforge.theme` (`{ dark, vars }`) and
+`pyforge.onThemeChange(fn)`, for drawing on a canvas, say. Variables are only
 ever added.
 
 #### List and detail views
@@ -1468,7 +1469,7 @@ installed and signed with the package. The IDE loads the page from its own
 `pyforge-plugin` URL scheme into an `<iframe sandbox="allow-scripts">`: an
 opaque origin, no network, no cookies or storage, no IDE API, and only the
 page's own files (relative URLs, ES modules, fonts, WebAssembly) — so build
-it with relative paths (Vite: `base: "./"`). The same `openidea` object as
+it with relative paths (Vite: `base: "./"`). The same `pyforge` object as
 in `html` bodies is there before the page's scripts run, plus:
 
 | `window.pyforge`                     | What it does                                                                                                                                                       |
@@ -1488,17 +1489,17 @@ the `clipboard` capability the page may use `navigator.clipboard`.
 An ungrouped tool-window web view that renders its own top bar can declare
 `header = "none"` (API 1.3: `engines.pyforge = "^1.3"`): once the page is
 ready, the IDE replaces the standard tool-window header with top-right corner
-actions (`Options` and `Hide`) and sets `--openidea-corner-inset-width` (`64px`)
-and `--openidea-corner-inset-height` (`34px`) on the frame's root element (and
-in `openidea.theme.vars`) so the page can pad its top bar around them. Loading
+actions (`Options` and `Hide`) and sets `--pyforge-corner-inset-width` (`64px`)
+and `--pyforge-corner-inset-height` (`34px`) on the frame's root element (and
+in `pyforge.theme.vars`) so the page can pad its top bar around them. Loading
 and error states keep the standard tool-window header.
 Omitting `header` (or setting `header = "default"`) keeps the standard header.
 For example, a page can reserve the corner in its own toolbar:
 
 ```css
 .toolbar {
-  min-height: var(--openidea-corner-inset-height, 0px);
-  padding-right: var(--openidea-corner-inset-width, 0px);
+  min-height: var(--pyforge-corner-inset-height, 0px);
+  padding-right: var(--pyforge-corner-inset-width, 0px);
 }
 ```
 
@@ -1512,7 +1513,7 @@ before installing the plugin from the repository.
 ### Web frame PTYs (API 1.3)
 
 Packages requiring `engines.pyforge = "^1.3"` can exchange JSON strings through
-`openidea.postMessage` / `onMessage` to own an interactive PTY. Declare
+`pyforge.postMessage` / `onMessage` to own an interactive PTY. Declare
 `process:<program>` in the manifest; the install dialog shows its high-risk
 permission and the user must grant it. The host runs the exact approved file,
 never a fresh PATH lookup or an implicit fallback shell. A shell requires its
@@ -1553,7 +1554,7 @@ This API is a web bridge extension; existing WIT signatures are unchanged.
 A web view can open a read-only editor tab backed by an authorized process:
 
 ```js
-openidea.postMessage(JSON.stringify({
+pyforge.postMessage(JSON.stringify({
   op: "open-log-tab",
   key: "server-output",
   title: "Server logs",
@@ -1577,7 +1578,7 @@ to the title and is scoped to the calling plugin and view; reopening the same
 key focuses its existing tab. Titles are at most 256 characters, keys 128,
 and at most 32 toggles have ids of 64 and labels of 128 characters. The combined
 arguments must fit the PTY limits above. `cwd` and `env` are refused. Invalid or
-ungranted requests send `log-error { error }` through `openidea.onMessage`;
+ungranted requests send `log-error { error }` through `pyforge.onMessage`;
 backend start errors appear in the tab.
 
 The viewer supports selection/copy, soft wrap, Find, font zoom and Clear. It
@@ -1700,7 +1701,7 @@ plugin-defined toolbar actions that call back into the plugin. Declare
 `engines.pyforge = "^1.3"` when using this protocol:
 
 ```js
-openidea.postMessage(JSON.stringify({
+pyforge.postMessage(JSON.stringify({
   op: "open-content-tab",
   key: "service-config",
   title: "service.toml",
@@ -1723,7 +1724,7 @@ calling plugin and view; `fileName` (1–256 characters, no path separators) and
 `readOnly` defaults to `false`. `actions` lists up to 16 toolbar buttons with
 unique `id`s (1–64 characters), `label`s (1–128 characters), an optional built-in
 `icon` name, `primary`, and `save` (at most one action may set `save: true`).
-Invalid requests send `content-tab-error { error }` through `openidea.onMessage`.
+Invalid requests send `content-tab-error { error }` through `pyforge.onMessage`.
 
 Clicking an action (or saving via ⌘S / the close-with-changes prompt) sends
 `content-tab-action { requestId, key, action, content }` to the web view and, when
@@ -2207,7 +2208,8 @@ in place of every publisher but `--keep`; `check` also takes a `.oiplugin`.
 The IDE's default marketplace is `plugins-index.json` of the latest release.
 It lists two kinds of plugins:
 
-- **Official** (`plugins/official/`, ids `openidea.*`): maintained in this
+- **Official** (`plugins/official/`, ids `openidea.*` — the id prefix is part of
+  a published plugin identity, so it keeps its original name): maintained in this
   repository, built and signed by its release workflow, and kept working as
   the API changes. New official plugins are proposed in an issue first; they
   cover general needs or show how to use part of the API.

@@ -603,10 +603,10 @@ pub async fn plugin_log_tab_spawn(
     .map_err(|e| IdeError::internal(e.to_string()))?
 }
 
-/// Largest file a web view saves or opens (`openidea.saveFile` / `openFile`).
+/// Largest file a web view saves or opens (`pyforge.saveFile` / `openFile`).
 const MAX_WEB_VIEW_FILE: u64 = 64 << 20;
 
-/// Writes what a web view saves (`openidea.saveFile`) to the path the user
+/// Writes what a web view saves (`pyforge.saveFile`) to the path the user
 /// chose in the save dialog, on this machine.
 #[tauri::command]
 #[specta::specta]
@@ -624,7 +624,7 @@ pub async fn plugin_web_save_file(path: PathBuf, base64: String) -> IdeResult<()
 }
 
 /// Reads the file the user picked in an open dialog for a web view
-/// (`openidea.openFile`), on this machine; base64.
+/// (`pyforge.openFile`), on this machine; base64.
 #[tauri::command]
 #[specta::specta]
 pub async fn plugin_web_read_file(path: PathBuf) -> IdeResult<String> {

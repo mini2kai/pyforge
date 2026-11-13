@@ -374,7 +374,7 @@ mod runtime {
       const api = window.__TAURI_INTERNALS__;
       const label = api?.metadata?.currentWindow?.label;
       if (label) api.invoke('plugin:event|emit', {
-        event: 'openidea://window-state-presented', payload: { label, request }
+        event: 'pyforge://window-state-presented', payload: { label, request }
       });
       if (request !== state.request) state.ready();
     }));
@@ -428,7 +428,7 @@ mod runtime {
                     .unwrap_or_default();
                 app.manage(Mutex::new(Cache { saved, ..Default::default() }));
                 let handle = app.clone();
-                app.listen("openidea://window-state-presented", move |event| {
+                app.listen("pyforge://window-state-presented", move |event| {
                     #[derive(serde::Deserialize)]
                     struct Presented {
                         label: String,

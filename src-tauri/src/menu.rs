@@ -26,7 +26,7 @@ use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, MenuItemKind, Prede
 use tauri::{AppHandle, Runtime};
 
 /// Event emitted to the focused window when an IDE menu item is clicked.
-pub const MENU_EVENT: &str = "openidea://menu";
+pub const MENU_EVENT: &str = "pyforge://menu";
 /// Prefix of Open Recent item ids; the rest of the id is the project path.
 const RECENT_PREFIX: &str = "recent:";
 /// Prefix of items the frontend lists ([`MenuConfig::dynamic`]): `dyn:<action>` or `dyn:<action>|<arg>`.

@@ -7,8 +7,8 @@ pub const USAGE: &str = "\
 Usage: pyforge [options] [[--line <n>] [--column <n>] path[:line[:column]] ...]
        pyforge diff <left> <right>
 
-Opens folders as projects and files in the editor of the running OpenIDEA,
-starting it if needed. Without paths, brings OpenIDEA to the front.
+Opens folders as projects and files in the editor of the running PyForge,
+starting it if needed. Without paths, brings PyForge to the front.
 Lines and columns start at 1; --line and --column apply to the next path.
 
 Options:

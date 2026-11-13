@@ -2428,7 +2428,7 @@ fn mcp_servers_follow_server_state_and_agent_capabilities() {
     let servers = super::stdio_mcp_servers(Some(exe), true, root);
     assert_eq!(
         servers,
-        vec![json!({"name":"OpenIDEA","command":"/app/openidea",
+        vec![json!({"name":"PyForge","command":"/app/openidea",
         "args":["--mcp-stdio","--project","/project"],"env":[]})]
     );
 }

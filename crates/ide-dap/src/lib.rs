@@ -995,7 +995,7 @@ impl DebugManager {
                 "initialize",
                 json!({
                     "clientID": "openidea",
-                    "clientName": "OpenIDEA",
+                    "clientName": "PyForge",
                     "adapterID": s.adapter,
                     "locale": "en",
                     "linesStartAt1": true,

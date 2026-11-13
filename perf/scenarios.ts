@@ -120,7 +120,7 @@ const completion: Scenario = {
   title: "Code completion over 2,000 items",
   async run(h) {
     await h.page.evaluate(() =>
-      (window as never as { __openideaPerf: { fakeCompletion(n: number): void } }).__openideaPerf.fakeCompletion(2_000),
+      (window as never as { __pyforgePerf: { fakeCompletion(n: number): void } }).__pyforgePerf.fakeCompletion(2_000),
     );
     try {
       await h.openFile(`${ROOT}/src/completion/Orders.ts`, tsSource(2_000, "completion"));
@@ -146,7 +146,7 @@ const completion: Scenario = {
       };
     } finally {
       await h.page.evaluate(() =>
-        (window as never as { __openideaPerf: { fakeCompletion(n: number): void } }).__openideaPerf.fakeCompletion(0),
+        (window as never as { __pyforgePerf: { fakeCompletion(n: number): void } }).__pyforgePerf.fakeCompletion(0),
       );
     }
   },
@@ -170,9 +170,9 @@ const consoleOutput: Scenario = {
     const t0 = await h.now();
     await h.inPage((p) => p.startFrames());
     const streamMs = h.page.evaluate(async () => {
-      const w = window as never as { __openideaPerf: { runAction(id: string, arg?: unknown): Promise<boolean> } };
+      const w = window as never as { __pyforgePerf: { runAction(id: string, arg?: unknown): Promise<boolean> } };
       const started = performance.now();
-      await w.__openideaPerf.runAction("run.sampleOutput", { lines: 50_000, perFrame: 200 });
+      await w.__pyforgePerf.runAction("run.sampleOutput", { lines: 50_000, perFrame: 200 });
       return performance.now() - started;
     });
     // The console takes focus with it; type back in the editor while it streams.
@@ -279,13 +279,13 @@ const gitLog: Scenario = {
   async run(h) {
     await h.page.evaluate(() =>
       (
-        window as never as { __openideaPerf: { fakeGitLog(n: number, latencyMs?: number): void } }
-      ).__openideaPerf.fakeGitLog(20_000, 150),
+        window as never as { __pyforgePerf: { fakeGitLog(n: number, latencyMs?: number): void } }
+      ).__pyforgePerf.fakeGitLog(20_000, 150),
     );
     const showMs = await h.measure(
       () =>
         h.page.evaluate(() =>
-          (window as never as { __openideaPerf: { runAction(id: string): Promise<boolean> } }).__openideaPerf.runAction(
+          (window as never as { __pyforgePerf: { runAction(id: string): Promise<boolean> } }).__pyforgePerf.runAction(
             "vcs.showLog",
           ),
         ),
@@ -324,12 +324,12 @@ const gitLogScrollbar: Scenario = {
     await h.page.evaluate(async () => {
       const probe = (
         window as never as {
-          __openideaPerf: {
+          __pyforgePerf: {
             fakeGitLog(n: number): void;
             runAction(id: string): Promise<boolean>;
           };
         }
-      ).__openideaPerf;
+      ).__pyforgePerf;
       probe.fakeGitLog(6000);
       await probe.runAction("vcs.showLog");
     });
@@ -372,12 +372,12 @@ const resizePanels: Scenario = {
   async run(h) {
     await h.openFile(SAMPLE);
     await h.page.evaluate(() =>
-      (window as never as { __openideaPerf: { fakeGitLog(n: number): void } }).__openideaPerf.fakeGitLog(2_000),
+      (window as never as { __pyforgePerf: { fakeGitLog(n: number): void } }).__pyforgePerf.fakeGitLog(2_000),
     );
     await h.measure(
       () =>
         h.page.evaluate(() =>
-          (window as never as { __openideaPerf: { runAction(id: string): Promise<boolean> } }).__openideaPerf.runAction(
+          (window as never as { __pyforgePerf: { runAction(id: string): Promise<boolean> } }).__pyforgePerf.runAction(
             "vcs.showLog",
           ),
         ),
@@ -501,8 +501,8 @@ const agentTabs: Scenario = {
     await h.page.addStyleTag({ content: "* { overflow-anchor: none !important; }" });
     await h.page.evaluate(() =>
       (
-        window as never as { __openideaPerf: { runAction(id: string, arg?: unknown): Promise<boolean> } }
-      ).__openideaPerf.runAction("agents.openSampleConversations", { tasks: 2, turns: 150 }),
+        window as never as { __pyforgePerf: { runAction(id: string, arg?: unknown): Promise<boolean> } }
+      ).__pyforgePerf.runAction("agents.openSampleConversations", { tasks: 2, turns: 150 }),
     );
     const shown = (n: number) => `[data-editor-focus] span[title="Sample task ${n}"]`;
     // Both conversations get their earlier entries painted in background batches, also the
@@ -712,7 +712,7 @@ const leaks: Scenario = {
       for (let i = 0; i < 10; i++)
         await h.openFile(`${ROOT}/src/leak/File${n}_${i}.ts`, tsSource(1_500, `leak-${n}-${i}`));
       await h.page.evaluate(() =>
-        (window as never as { __openideaPerf: { runAction(id: string): Promise<boolean> } }).__openideaPerf.runAction(
+        (window as never as { __pyforgePerf: { runAction(id: string): Promise<boolean> } }).__pyforgePerf.runAction(
           "editor.closeAllTabs",
         ),
       );
