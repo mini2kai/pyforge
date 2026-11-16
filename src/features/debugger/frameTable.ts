@@ -161,20 +161,60 @@ async function evaluate(session: DebugSessionId, frameId: number | null, express
   return call(commands.debugEvaluate(session, frameId, expression));
 }
 
-/** A JSON string as the debugger reports it: `'…'` or `"…"`, with escapes. */
+/**
+ * A JSON string as the debugger reports it: the value of a Python `str`, quoted and with
+ * Python's escapes.
+ *
+ * Scanned rather than `JSON.parse`d: Python writes `\'` inside a single-quoted result,
+ * which is not a JSON escape, and wrapping the body in double quotes to reuse `JSON.parse`
+ * needs a lookbehind to tell a real quote from an escaped one — `(?<!\)` needs Safari
+ * 16.4, which this app does not require.
+ */
 export function unquote(value: string): string {
   const t = value.trim();
-  if (t.length > 1 && /^['"]/.test(t)) {
-    try {
-      // The debugger renders a `str` result with quotes and Python escapes; JSON.parse
-      // understands the same escapes for the characters a JSON payload can contain.
-      return JSON.parse(t.startsWith("'") ? `"${t.slice(1, -1).replace(/(?<!\\)"/g, '\\"')}"` : t) as string;
-    } catch {
-      return t.slice(1, -1);
+  if (t.length < 2) return t;
+  const quote = t[0];
+  if ((quote !== "'" && quote !== '"') || t[t.length - 1] !== quote) return t;
+  return unescapePython(t.slice(1, -1));
+}
+
+/** Undoes the escapes a Python `repr` puts in a string; anything unknown is kept as written. */
+function unescapePython(body: string): string {
+  let out = "";
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i]!;
+    if (ch !== BACKSLASH || i + 1 >= body.length) {
+      out += ch;
+      continue;
+    }
+    const next = body[++i]!;
+    switch (next) {
+      case "n":
+        out += "\n";
+        break;
+      case "t":
+        out += "\t";
+        break;
+      case "r":
+        out += "\r";
+        break;
+      case "0":
+        out += "\u0000";
+        break;
+      case BACKSLASH:
+      case "'":
+      case '"':
+        out += next;
+        break;
+      default:
+        out += BACKSLASH + next;
     }
   }
-  return t;
+  return out;
 }
+
+/** Named so the source has no escape sequence for a backslash literal. */
+const BACKSLASH = String.fromCharCode(92);
 
 /** `[rows, columns]` from `shapeExpression`. */
 export function parseShape(json: string): [number, number] | null {
