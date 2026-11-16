@@ -613,6 +613,10 @@ fn build_project_window(app: &AppHandle, mut config: WindowConfig) -> IdeResult<
     {
         let _ = window.set_background_color(Some(frame_color(&a, true)));
     }
+    // Before it is shown, so it never appears oversized for a frame.
+    if let Err(e) = fit_to_work_area(&window) {
+        tracing::warn!("fitting the window to its work area: {e}");
+    }
     #[cfg(target_os = "linux")]
     if show_after_build {
         window.show().map_err(|e| IdeError::internal(format!("cannot show window: {e}")))?;
@@ -1510,6 +1514,45 @@ pub(super) fn place_over_parent(window: &WebviewWindow, parent: &WebviewWindow) 
         window.maximize()?;
     }
     Ok(())
+}
+
+/// Fits a window that was created larger than the display it lands on.
+///
+/// The configured size (`1440x900` in `tauri.conf.json`) is a default written for a large
+/// screen. On a smaller one the window came up bigger than the work area — larger than the
+/// same window maximized — with its title bar and edges off-screen. Nothing else constrains
+/// a project window: `fit_over_parent` only places dialogs.
+///
+/// A window that already fits is left exactly as it is, position included.
+fn fit_to_work_area(window: &WebviewWindow) -> tauri::Result<()> {
+    let Some(monitor) = window.current_monitor()?.or(window.primary_monitor()?) else {
+        return Ok(());
+    };
+    let scale = monitor.scale_factor();
+    let area = monitor.work_area();
+    let origin = area.position.to_logical::<f64>(scale);
+    let available = area.size.to_logical::<f64>(scale);
+    let inner = window.inner_size()?.to_logical::<f64>(scale);
+    let outer = window.outer_size()?.to_logical::<f64>(scale);
+    // Native decorations (title bar, borders) are part of what has to fit.
+    let frame = (outer.width - inner.width, outer.height - inner.height);
+    let fits = outer.width <= available.width && outer.height <= available.height;
+    if fits {
+        return Ok(());
+    }
+    let size = (
+        (available.width - frame.0).max(1.0),
+        (available.height - frame.1).max(1.0),
+    );
+    // `set_min_size` may exceed the new size on a tiny work area; the work area wins.
+    window.set_min_size(Some(
+        tauri::LogicalSize::new(size.0.min(available.width).max(1.0), size.1.min(available.height).max(1.0))
+            .to_physical::<u32>(scale),
+    ))?;
+    window.set_size(tauri::LogicalSize::new(size.0, size.1).to_physical::<u32>(scale))?;
+    let x = origin.x + ((available.width - (size.0 + frame.0)) / 2.0).max(0.0);
+    let y = origin.y + ((available.height - (size.1 + frame.1)) / 2.0).max(0.0);
+    window.set_position(tauri::PhysicalPosition::new((x * scale).round() as i32, (y * scale).round() as i32))
 }
 
 fn fit_bounds(parent: (f64, f64, f64, f64), size: (f64, f64), work: (f64, f64, f64, f64)) -> (f64, f64, f64, f64) {

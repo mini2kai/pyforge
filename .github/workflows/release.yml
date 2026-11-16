@@ -60,7 +60,13 @@ jobs:
 
       # `pnpm build` runs `tsc --noEmit` first, so a type error fails the release
       # rather than shipping. `tauri build` invokes it via beforeBuildCommand.
+      # The updater refuses an unsigned artifact, and an installed copy refuses an update
+      # signed with a key it does not know: the private key here must match the `pubkey`
+      # in tauri.conf.json. Losing it means no installed copy can ever be updated again.
       - name: Build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm tauri build
 
       # The portable executable and the installers are different downloads for
@@ -73,6 +79,10 @@ jobs:
           cp target/release/pyforge.exe out/ 2>/dev/null || true
           find target/release/bundle -type f \( -name '*.exe' -o -name '*.msi' \) \
             -exec cp {} out/ \; 2>/dev/null || true
+          # The signed installer is the update payload: `latest.json` points at it, not at
+          # the portable exe. Both stay published — a first-time user downloads one, an
+          # installed copy fetches the other.
+          find target/release/bundle -type f -name '*.sig' -exec cp {} out/ \; 2>/dev/null || true
           ls -lh out
 
       - uses: actions/upload-artifact@v4
@@ -82,14 +92,31 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      # The manifest an installed copy polls. It names the installer and carries the
+      # signature that copy verifies against its built-in public key, so it has to be
+      # built from the same run that signed the installer.
+      - name: Write latest.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          node scripts/make-latest-json.ts --version "$version" --tag "$GITHUB_REF_NAME"             --notes "See the release notes." 
+          cp latest.json out/latest.json
+
       # A manual run stops here: the artifacts are on the run's page, and no release
       # is created. Only a tag publishes.
+      #
+      # `draft: false` because the updater fetches `latest.json` from
+      # `releases/latest/download/…`: GitHub excludes drafts from that URL, so a draft
+      # release would never be seen by an installed copy. The notes below are the body a
+      # user reads; replace them with the real ones before tagging.
       - name: Attach to the release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: out/*
-          draft: true
+          draft: false
           # Unsigned builds trip SmartScreen, and most bugs in this fork are upstream's.
           body: |
             PyForge ${{ github.ref_name }} — a test build, not a product.
@@ -98,6 +125,6 @@ jobs:
               “More information” → “Run anyway”.
             - The portable `pyforge.exe` needs WebView2, which Windows 11 has and
               some Windows 10 installs do not. The installer brings it.
-            - No auto-update: this fork does not point at an update server.
+            - Auto-update is on: an installed copy checks `latest.json` for a newer version.
             - Most of what you see is upstream [OpenIDEA](https://github.com/l0ng-ai/openidea);
               see the repository README for what this fork adds and what it lacks.

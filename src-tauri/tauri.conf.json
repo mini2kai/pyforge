@@ -22,7 +22,8 @@
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "backgroundColor": "#E9EAEE",
-        "dragDropEnabled": true
+        "dragDropEnabled": true,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows"
       }
     ],
     "security": {
@@ -32,7 +33,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "category": "DeveloperTool",
     "copyright": "Copyright © 2026 PyForge contributors",
@@ -47,8 +48,8 @@
   "mainBinaryName": "pyforge",
   "plugins": {
     "updater": {
-      "pubkey": "untrusted comment: PyForge POC build; no update endpoint is configured\nRWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3",
-      "endpoints": []
+      "pubkey": "untrusted comment: minisign public key: 532220677CF20C14\nRWQUDPJ8ZyAiU870AuHx7VkuBNZEHohm/6uVNXVkrvvHSe0Ettnzx08E\n",
+      "endpoints": ["https://github.com/ppk159/pyforge/releases/latest/download/latest.json"]
     }
   }
 }

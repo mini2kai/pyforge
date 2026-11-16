@@ -72,3 +72,11 @@ fixtures/**/_rv*.py
 !/.github/workflows/release.yml
 !/.github/workflows/ci.yml
 /.openidea/
+
+# Signing keys for release builds. The private half must never be committed: losing it
+# means no installed copy can ever be updated again, and leaking it means anyone can
+# sign an update every installed copy will accept.
+*.key
+*.key.pub
+~/.tauri/
+latest.json

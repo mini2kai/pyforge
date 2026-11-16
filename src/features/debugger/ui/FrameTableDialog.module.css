@@ -1,0 +1,87 @@
+/* A DataFrame shown as a grid: sticky header row and row numbers, monospaced cells. */
+
+.scroll {
+  overflow: auto;
+  max-height: min(64vh, 720px);
+  border: 1px solid var(--border, var(--bg-app));
+  border-radius: 4px;
+}
+
+.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  font: 12px var(--font-mono);
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.grid th,
+.grid td {
+  padding: 2px 10px;
+  border-bottom: 1px solid var(--border, var(--bg-app));
+  text-align: left;
+  font-weight: normal;
+}
+
+.grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-elev, var(--bg-app));
+  color: var(--fg-strong);
+  border-bottom: 1px solid var(--fg-faint);
+}
+
+/* Row and column numbers: dimmer, and stuck to the left/right edges. */
+.gutter {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg-elev, var(--bg-app));
+  color: var(--fg-faint);
+  text-align: right;
+  min-width: 3ch;
+}
+
+thead .gutter {
+  z-index: 3;
+}
+
+.numeric {
+  text-align: right;
+}
+
+.status {
+  color: var(--fg-subtle);
+  font-size: 12px;
+}
+
+.error {
+  color: var(--danger);
+  padding: 8px 2px;
+}
+
+/* Selected cells: one flat colour, no outline — a dragging selection is a rectangle, and
+   per-cell borders would draw a grid on top of the grid. */
+.selected {
+  background: var(--bg-selected-strong, var(--bg-selected));
+  color: var(--fg-on-accent, #fff);
+}
+
+.scroll:focus {
+  outline: none;
+}
+
+/* Footer: the shape on the left, the pager and Export on the right. */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

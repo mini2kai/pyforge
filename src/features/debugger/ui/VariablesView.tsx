@@ -8,10 +8,20 @@ import { activeEditor } from "@/editor/api";
 import { notifications } from "@/workbench/contributions";
 import { addFieldWatchpoint } from "../breakpoints/special";
 import { methodAt } from "../breakpoints/symbols";
-import { activeSession, addWatch, removeWatch, revealFrame, sessionSupports, setVariableValue } from "../state";
+import {
+  activeSession,
+  addWatch,
+  removeWatch,
+  revealFrame,
+  sessionSupports,
+  setVariableValue,
+  useDebug,
+} from "../state";
 import { blurDebugView, focusDebugView } from "./focusedView";
 import { classifyValue, oneLine, sortVariables } from "../values";
 import { valueText } from "../valueText";
+import { isDataFrame } from "../frameTable";
+import { FrameTableDialog } from "./FrameTableDialog";
 import { workflowSettings } from "@/platform/workflowSettings";
 import styles from "./VariablesView.module.css";
 
@@ -80,6 +90,16 @@ function fromVariable(key: string, v: Variable, container: number, depth0 = fals
     error: null,
     depth0,
     container,
+  };
+}
+
+function variableOf(n: VarNode): Variable {
+  return {
+    name: n.name,
+    value: n.value,
+    typeName: n.typeName,
+    variablesReference: n.reference,
+    evaluateName: n.evaluateName,
   };
 }
 
@@ -290,6 +310,8 @@ export function VariablesView({
     await navigator.clipboard?.writeText(text);
   };
 
+  const [tableVariable, setTableVariable] = useState<{ session: DebugSessionId; variable: Variable } | null>(null);
+
   const onContextMenu = (node: VarNode | null, _sel: Set<string>, e: React.MouseEvent) => {
     if (!node || node.kind === "message") return;
     e.preventDefault();
@@ -300,6 +322,14 @@ export function VariablesView({
         { kind: "separator" },
       );
     if (node.kind === "watch") items.push({ label: "Remove Watch", icon: "minus", run: () => removeWatch(node.name) });
+    // A DataFrame's repr is truncated by pandas before the IDE sees it; the table reads the
+    // data from the debuggee instead.
+    if (node.kind === "var" && session && isDataFrame(node))
+      items.push({
+        label: "View as Table",
+        icon: "table",
+        run: () => setTableVariable({ session, variable: variableOf(node) }),
+      });
     if (node.kind !== "scope") {
       items.push({ label: "Copy Value", icon: "copy", run: () => void copyValue(node) });
       items.push({ label: "Copy Name", run: () => void navigator.clipboard?.writeText(node.name) });
@@ -366,11 +396,28 @@ export function VariablesView({
               }}
             />
           ) : (
-            <VarRow node={n} changed={isChanged(n)} onShowValue={setValuePopup} />
+            <VarRow
+              node={n}
+              changed={isChanged(n)}
+              onShowValue={(node) => {
+                // A DataFrame's text is a truncated repr; `Show` on it should give the
+                // table, not the text the row already shows.
+                if (session && isDataFrame(node)) setTableVariable({ session, variable: variableOf(node) });
+                else setValuePopup(node);
+              }}
+            />
           )
         }
       />
       {valuePopup && <ValueDialog node={valuePopup} onClose={() => setValuePopup(null)} />}
+      {tableVariable && (
+        <FrameTableDialog
+          session={tableVariable.session}
+          frameId={useDebug.getState().sessions[tableVariable.session]?.selectedFrame ?? null}
+          variable={tableVariable.variable}
+          onClose={() => setTableVariable(null)}
+        />
+      )}
     </div>
   );
 }
